@@ -41,7 +41,7 @@ const ideaSchema = new mongoose.Schema(
     anonymity: {
       type: String,
       required: true,
-      emu: ["Not Anonymous", "Anonymous"],
+      emu: ["Non Anonymous", "Anonymous"],
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,

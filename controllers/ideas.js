@@ -1,0 +1,148 @@
+const express = require('express')
+const verifyToken = require('../middleware/verify-token')
+const Idea = require('../models/idea')
+const router = express.Router()
+
+// CREATE - POST - /ideas
+router.post('/', verifyToken, async (req,res) => {
+    try{
+        req.body.author =req.user._id;
+        const idea =await Idea.create(req.body)
+        idea._doc.author= req.user
+        res.status(201).json(idea)
+    } catch (err) {
+        res.status(500).json({err: err.message })
+    }
+})
+
+//GET /ideas
+router.get("/", verifyToken, async (req, res) => {
+    try {
+        const ideas = await Idea.find({})
+        .populate("author")
+        .sort({ createAt:"desc"})
+    res.status(200).json(ideas)
+    } catch (err) {
+        res.status(500).json({ err:err.message})
+    }
+  });
+
+//GET /ideas/:ideaId
+router.get("/:ideaId",verifyToken, async (req,res) =>{
+    try {
+        const idea = await Idea.findById(req.params.ideaId).populate([
+            'author',
+            'comments.author'
+        ]);
+        res.status(200).json(idea)
+    } catch(err) {
+        res.status(500).json({ err:err.message})
+    }
+})
+
+//PUT /ideas/:ideaId
+router.put("/:ideaId", verifyToken,async(req,res) =>{
+    try{
+        //Find the idea:
+        const idea = await Idea.findById(req.params.ideaId);
+
+        //Check permissions:
+        if (!idea.author.equals(req.user._id)) {
+            return res.status(403).send("You're not allowed to do that")
+        }
+        // Update idea:
+        const updatedIdea = await Idea.findByIdAndUpdate(
+            req.params.ideaId,
+            req.body,
+            {new:true}
+        )
+        //Append req.user to the author property:
+        updatedIdea._doc.author = req.user;
+
+        //Issue JSON response:
+        res.status(200).json(updatedIdea)
+        } catch (err) {
+            res.status(500).json({ err:err.message});
+        }
+    
+})
+
+//DELETE /ideas/:ideaId
+router.delete("/:ideaId", verifyToken, async (req,res) =>{
+    try{
+        const idea = await Idea.findById(req.params.ideaId) 
+
+        if (!idea.author.equals(req.user._id)){
+            return res.status(403).send("You're not allowed to do that!")
+        }
+        const deletedIdea= await Idea.findByIdAndDelete(req.params.ideaId)
+        res.status(200).json(deletedIdea)
+        } catch (err) {
+            res.status(500).json({err:err.message})
+        }
+})
+
+//POST / ideas/:ideaId/comments
+router.post("/:ideaId/comments", verifyToken, async(req, res) => {
+    try {
+        req.body.author =req.user._id
+        const idea = await Idea.findById(req.params.ideaId)
+        idea.comments.push(req.body);
+        await idea.save()
+        
+        //Find the newly created comment:
+        const newComment = idea.comments[idea.comments.length - 1]
+
+        newComment._doc.author =req.user
+
+        //Respond with the newComment:
+        res.status(201).json(newComment);
+    } catch (err) {
+        res.status(500).json({ err:err.message})
+    }
+})
+  
+//PUT /idea/:ideaId/comments/:commentId
+router.put("/:ideaId/comments/:commentId", verifyToken, async (req,res)=>{
+    
+    try {
+        const idea = await Idea.findById(req.params.ideaId);
+        const comment = idea.comments.id(req.params.commentId);
+
+        //ensures the current user is the author of the comment
+        if (comment.author.toString() !== req.user._id){
+            return res
+            .status(403)
+            .json({ message:"You are not authorised to edit this comment"})
+        }
+
+        comment.text = req.body.text;
+        await idea.save();
+        res.status(200).json({message:"Comment updated successfully"});
+    } catch (err){
+        res.status(500).json({err:err.message})
+    }
+})
+
+//Delete /idea/:ideaId/comments/:commentId
+router.delete("/:ideaId/comments/:commentId",verifyToken,async(req,res) =>{
+    try {
+        const idea = await Idea.findById(req.params.ideaId);
+        const comment = await idea.comments.id(req.params.commentId)
+
+        //ensure the current user is the author of the comment
+        if(comment.author.toString() !== req.user._id) {
+            return res
+            .status(403)
+            .json({message:"You are not authorised to delete this comment"})
+        }
+
+        idea.comments.remove({_id: req.params.commentId})
+        await idea.save()
+        res.status(200).json({message:"Comment deleted successfully"});
+    } catch (err) {
+        res.status(500).json({err:err.message})
+    }
+})
+module.exports = router
+
