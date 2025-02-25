@@ -32,7 +32,8 @@ router.get("/:ideaId",verifyToken, async (req,res) =>{
     try {
         const idea = await Idea.findById(req.params.ideaId).populate([
             'author',
-            'comments.author'
+            'comments.author',
+            'likes.author'
         ]);
         res.status(200).json(idea)
     } catch(err) {
@@ -144,5 +145,49 @@ router.delete("/:ideaId/comments/:commentId",verifyToken,async(req,res) =>{
         res.status(500).json({err:err.message})
     }
 })
+
+//Put /idea/:ideaId/likes/:likeId
+router.put("/:ideaId/likes/:likeId",verifyToken,async(req,res) => {
+    try {
+        const idea = await Idea.findById(req.params.ideaId);
+        const like = idea.likes.id(req.params.likeId);
+
+        //ensure the current user is the author of the like
+        if (like.author.toString() !== req.user._id){
+            return res
+            .status(403)
+            .json({message: "You are not authorised to make changes to this like"})
+        }
+
+        like.like = req.body.like
+        await idea.save()
+
+        res.status(200).json({ message:'Like/Dislike updated sucessfully'})
+    } catch(err) {
+        res.status(500).json({err:err.message})
+    }
+})
+
+//Delete/idea/:ideaId/likes/:likeId
+router.delete("/:ideaId/likes/:likeId", verifyToken,async(req,res) => {
+    try {
+        const idea = await Idea.findById(req.params.ideaId);
+        const like = idea.likes.id(req.params.likeId);
+
+        //ensure the current user is the author of the like
+        if (like.author.toString() !== req.user._id){
+            return res
+            .status(403)
+            .json({message: "You are not authorised to make changes to this like"})
+        }
+        
+        idea.likes.remove({_id:req.params.likeId});
+        await idea.save();
+        res.status(200).json({ message:'Like/Dislike updated sucessfully'})
+    } catch(err) {
+        res.status(500).json({err:err.message})
+    }
+})
+
 module.exports = router
 
