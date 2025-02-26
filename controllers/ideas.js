@@ -146,6 +146,26 @@ router.delete("/:ideaId/comments/:commentId",verifyToken,async(req,res) =>{
     }
 })
 
+//POST / ideas/:ideaId/likes
+router.post("/:ideaId/likes", verifyToken, async(req, res) => {
+    try {
+        req.body.author =req.user._id
+        const idea = await Idea.findById(req.params.ideaId)
+        idea.likes.push(req.body);
+        await idea.save()
+        
+        //Find the newly created comment:
+        const newLike = idea.likes[idea.likes.length - 1]
+
+        newLike._doc.author =req.user
+
+        //Respond with the newComment:
+        res.status(201).json(newLike);
+    } catch (err) {
+        res.status(500).json({ err:err.message})
+    }
+})
+  
 //Put /idea/:ideaId/likes/:likeId
 router.put("/:ideaId/likes/:likeId",verifyToken,async(req,res) => {
     try {
