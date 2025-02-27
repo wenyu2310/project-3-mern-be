@@ -9,7 +9,7 @@ const commentSchema = new mongoose.Schema(
     anonymity: {
       type: String,
       required: true,
-      emu: ["Not Anonymous", "Anonymous"],
+      enum: ["Not Anonymous", "Anonymous"],
     },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
@@ -21,7 +21,7 @@ const likeSchema = new mongoose.Schema(
     like: {
       type: String,
       required: true,
-      emu: ["Like", "Dislike"],
+      enum: ["Like", "Dislike"],
     },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
@@ -41,7 +41,7 @@ const ideaSchema = new mongoose.Schema(
     anonymity: {
       type: String,
       required: true,
-      emu: ["Not Anonymous", "Anonymous"],
+      enum: ["Non Anonymous", "Anonymous"],
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,
