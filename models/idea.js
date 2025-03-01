@@ -16,14 +16,14 @@ const commentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const likeSchema = new mongoose.Schema(
+const reactionSchema = new mongoose.Schema(
   {
-    like: {
+    type: {
       type: String,
       required: true,
       enum: ["Like", "Dislike"],
     },
-    author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    author: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
   },
   { timestamps: true }
 );
@@ -48,7 +48,7 @@ const ideaSchema = new mongoose.Schema(
       ref: "User",
     },
     comments: [commentSchema],
-    likes: [likeSchema],
+    reactions: [reactionSchema],
   },
   { timestamps: true }
 );

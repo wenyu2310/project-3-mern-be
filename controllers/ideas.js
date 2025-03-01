@@ -33,7 +33,7 @@ router.get("/:ideaId",verifyToken, async (req,res) =>{
         const idea = await Idea.findById(req.params.ideaId).populate([
             'author',
             'comments.author',
-            'likes.author'
+            'sentiments.author',
         ]);
         res.status(200).json(idea)
     } catch(err) {
@@ -147,39 +147,94 @@ router.delete("/:ideaId/comments/:commentId",verifyToken,async(req,res) =>{
 })
 
 //POST / ideas/:ideaId/likes
-router.post("/:ideaId/likes", verifyToken, async(req, res) => {
+// router.post("/:ideaId/likes", verifyToken, async(req, res) => {
+//     try {
+//         req.body.author =req.user._id
+//         const idea = await Idea.findById(req.params.ideaId)
+//         idea.likes.push(req.body);
+//         await idea.save()
+        
+//         //Find the newly created comment:
+//         const newLike = idea.likes[idea.likes.length - 1]
+
+//         newLike._doc.author =req.user
+
+//         //Respond with the newComment:
+//         res.status(201).json(newLike);
+//     } catch (err) {
+//         res.status(500).json({ err:err.message})
+//     }
+// })
+
+//POST Reaction
+router.post("/:ideaId/reactions", verifyToken, async(req, res) => {
     try {
         req.body.author =req.user._id
-        const idea = await Idea.findById(req.params.ideaId)
-        idea.likes.push(req.body);
+        const idea = await Idea.findById(req.params.ideaId);//get idea
+
+        if (!idea){
+            return res.status(404).json({message: "Idea not found"});
+        }
+
+        const existingReaction = idea.reactions.find(({author}) => author.toString() === req.user._id.toString())
+
+        if (existingReaction !== undefined){
+            return res
+            .status(403)
+            .json({message: "You cannot post a Like/Dislike more than once, you can update your Like/Dislike instead"})
+                }
+
+        idea.reactions.push(req.body);
         await idea.save()
         
         //Find the newly created comment:
-        const newLike = idea.likes[idea.likes.length - 1]
+        const newReaction = idea.reactions[idea.reactions.length - 1]
 
-        newLike._doc.author =req.user
+        newReaction._doc.author =req.user
 
         //Respond with the newComment:
-        res.status(201).json(newLike);
+        res.status(201).json(newReaction);
     } catch (err) {
         res.status(500).json({ err:err.message})
     }
 })
   
 //Put /idea/:ideaId/likes/:likeId
-router.put("/:ideaId/likes/:likeId",verifyToken,async(req,res) => {
+// router.put("/:ideaId/likes/:likeId",verifyToken,async(req,res) => {
+//     try {
+//         const idea = await Idea.findById(req.params.ideaId);
+//         const like = idea.likes.id(req.params.likeId);
+
+//         //ensure the current user is the author of the like
+//         if (like.author.toString() !== req.user._id){
+//             return res
+//             .status(403)
+//             .json({message: "You are not authorised to make changes to this like"})
+//         }
+
+//         like.like = req.body.like
+//         await idea.save()
+
+//         res.status(200).json({ message:'Like/Dislike updated sucessfully'})
+//     } catch(err) {
+//         res.status(500).json({err:err.message})
+//     }
+// })
+
+//Put /idea/:ideaId/reactions/:reactionId
+router.put("/:ideaId/reactions/:reactionId",verifyToken,async(req,res) => {
     try {
         const idea = await Idea.findById(req.params.ideaId);
-        const like = idea.likes.id(req.params.likeId);
+        const reaction = idea.reactions.id(req.params.reactionId);
 
         //ensure the current user is the author of the like
-        if (like.author.toString() !== req.user._id){
+        if (reaction.author.toString() !== req.user._id){
             return res
             .status(403)
-            .json({message: "You are not authorised to make changes to this like"})
+            .json({message: "You are not authorised to make changes to this Like/Dislike"})
         }
 
-        like.like = req.body.like
+        reaction.type = req.body.type
         await idea.save()
 
         res.status(200).json({ message:'Like/Dislike updated sucessfully'})
@@ -189,25 +244,45 @@ router.put("/:ideaId/likes/:likeId",verifyToken,async(req,res) => {
 })
 
 //Delete/idea/:ideaId/likes/:likeId
-router.delete("/:ideaId/likes/:likeId", verifyToken,async(req,res) => {
+// router.delete("/:ideaId/likes/:likeId", verifyToken,async(req,res) => {
+//     try {
+//         const idea = await Idea.findById(req.params.ideaId);
+//         const like = idea.likes.id(req.params.likeId);
+
+//         //ensure the current user is the author of the like
+//         if (like.author.toString() !== req.user._id){
+//             return res
+//             .status(403)
+//             .json({message: "You are not authorised to make changes to this like"})
+//         }
+        
+//         idea.likes.remove({_id:req.params.likeId});
+//         await idea.save();
+//         res.status(200).json({ message:'Like/Dislike updated sucessfully'})
+//     } catch(err) {
+//         res.status(500).json({err:err.message})
+//     }
+// })
+
+//Delete/idea/:ideaId/reactions/:reactionId
+router.delete("/:ideaId/reactions/:reactionId", verifyToken,async(req,res) => {
     try {
         const idea = await Idea.findById(req.params.ideaId);
-        const like = idea.likes.id(req.params.likeId);
+        const reaction = idea.reactions.id(req.params.reactionId);
 
         //ensure the current user is the author of the like
-        if (like.author.toString() !== req.user._id){
+        if (reaction.author.toString() !== req.user._id){
             return res
             .status(403)
-            .json({message: "You are not authorised to make changes to this like"})
+            .json({message: "You are not authorised to delete this Like/Dislike"})
         }
         
-        idea.likes.remove({_id:req.params.likeId});
+        idea.reactions.remove({_id:req.params.reactionId});
         await idea.save();
-        res.status(200).json({ message:'Like/Dislike updated sucessfully'})
+        res.status(200).json({ message:'Like/Dislike deleted sucessfully'})
     } catch(err) {
         res.status(500).json({err:err.message})
     }
 })
-
 module.exports = router
 
