@@ -6,11 +6,11 @@ const commentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // anonymity: {
-    //   type: String,
-    //   required: true,
-    //   enum: ["Non-Anonymous", "Anonymous"],
-    // },
+    anonymity: {
+      type: String,
+      required: true,
+      enum: ["Non-Anonymous", "Anonymous"],
+    },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
@@ -38,11 +38,11 @@ const ideaSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // anonymity: {
-    //   type: String,
-    //   required: true,
-    //   enum: ["Non-Anonymous", "Anonymous"],
-    // },
+    anonymity: {
+      type: String,
+      required: true,
+      enum: ["Non-Anonymous", "Anonymous"],
+    },
     author: {
       type: mongoose.Schema.Types.ObjectId, ref: "User", },
       originalAuthorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // added originalAuthorId to 
