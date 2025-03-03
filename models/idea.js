@@ -6,11 +6,11 @@ const commentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    anonymity: {
-      type: String,
-      required: true,
-      enum: ["Not Anonymous", "Anonymous"],
-    },
+    // anonymity: {
+    //   type: String,
+    //   required: true,
+    //   enum: ["Non-Anonymous", "Anonymous"],
+    // },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
@@ -23,7 +23,7 @@ const reactionSchema = new mongoose.Schema(
       required: true,
       enum: ["Like", "Dislike"],
     },
-    author: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
@@ -38,15 +38,14 @@ const ideaSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    anonymity: {
-      type: String,
-      required: true,
-      enum: ["Non Anonymous", "Anonymous"],
-    },
+    // anonymity: {
+    //   type: String,
+    //   required: true,
+    //   enum: ["Non-Anonymous", "Anonymous"],
+    // },
     author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
+      type: mongoose.Schema.Types.ObjectId, ref: "User", },
+      originalAuthorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // added originalAuthorId to 
     comments: [commentSchema],
     reactions: [reactionSchema],
   },
