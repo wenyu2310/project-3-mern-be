@@ -8,7 +8,6 @@ const logger = require('morgan');
 
 // Import Controllers
 const authRouter = require('./controllers/auth')
-const testJwtRouter = require('./controllers/test-jwt')
 const usersRouter = require('./controllers/users')
 const ideasRouter = require('./controllers/ideas')
 
@@ -25,7 +24,7 @@ app.use(express.json());
 app.use(logger('dev'));
 
 // Routes
-app.use('/test-jwt', testJwtRouter);
+
 app.use('/users', usersRouter);
 app.use('/auth', authRouter)
 app.use('/ideas', ideasRouter)
