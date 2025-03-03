@@ -6,7 +6,7 @@ const verifyToken = require('../middleware/verify-token')
 
 router.get('/', verifyToken, async (req, res) => {
     try {
-      // Get a list of all users, but only return their username and _id
+      // Get all ideas, sort by number of reactions, and display in descending order
       const users = await User.find({}, "username");
   
       res.json(users);

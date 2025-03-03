@@ -7,15 +7,9 @@ const router = express.Router()
 router.post('/', verifyToken, async (req,res) => {
     try{
         req.body.author =req.user._id;
-        req.body.originalAuthorId = req.user._id //need to create a duplicate to allow masking of author
 
         let idea = await Idea.create(req.body);
-        if (idea.anonymity === 'Anonymous') {
-          idea.author = null;
-        } else {
-          // idea.author = req.user
-          idea = await Idea.findById(idea._id).populate('author');
-        } 
+     
         res.status(201).json(idea)
     } catch (err) {
         console.log("Error creating idea:", err); 
@@ -28,17 +22,7 @@ router.get("/", verifyToken, async (req, res) => {
     try {
         const ideas = await Idea.find({})
         .populate("author")
-        .sort({ createdAt:"desc"})
-
-        ideas.forEach((idea) => {
-            if (idea.anonymity === 'Anonymous') {
-              idea.author = null;
-            }
-            //  else {
-            //   idea.author = req.user;
-            // } 
-        })
-
+        .sort({ createAt:"desc"})
     res.status(200).json(ideas)
     } catch (err) {
         res.status(500).json({ err:err.message})
@@ -52,15 +36,7 @@ router.get("/:ideaId",verifyToken, async (req,res) =>{
             'author',
             'comments.author',
             'reactions.author',
-            "originalAuthorId",
         ]);
-
-        if (idea.anonymity === 'Anonymous') {
-            idea.author = null;
-          } 
-        //   else {
-        //     idea.author = req.user;
-        //   } 
 
         res.status(200).json(idea)
     } catch(err) {
@@ -75,7 +51,7 @@ router.put("/:ideaId", verifyToken,async(req,res) =>{
         const idea = await Idea.findById(req.params.ideaId);
 
         //Check permissions:
-        if (!idea.originalAuthorId.equals(req.user._id)) {
+        if (!idea.author.equals(req.user._id)) {
             return res.status(403).send("You're not allowed to do that")
         }
         // Update idea:
@@ -101,7 +77,7 @@ router.delete("/:ideaId", verifyToken, async (req,res) =>{
     try{
         const idea = await Idea.findById(req.params.ideaId) 
 
-        if (!idea.originalAuthorId.equals(req.user._id)){
+        if (!idea.author.equals(req.user._id)){
             return res.status(403).send("You're not allowed to do that!")
         }
         const deletedIdea= await Idea.findByIdAndDelete(req.params.ideaId)
@@ -122,12 +98,7 @@ router.post("/:ideaId/comments", verifyToken, async(req, res) => {
         //Find the newly created comment:
         const newComment = idea.comments[idea.comments.length - 1]
 
-        await idea.populate('comments.author');
-        if (newComment.anonymity === 'Anonymous') {
-          newComment.author = null;
-        }
-
-        // newComment._doc.author =req.user
+        newComment._doc.author =req.user
 
         //Respond with the newComment:
         res.status(201).json(newComment);
@@ -179,26 +150,7 @@ router.delete("/:ideaId/comments/:commentId",verifyToken,async(req,res) =>{
     }
 })
 
-// //POST / ideas/:ideaId/likes
-// router.post("/:ideaId/likes", verifyToken, async(req, res) => {
-//     try {
-//         req.body.author =req.user._id
-//         const idea = await Idea.findById(req.params.ideaId)
-//         idea.likes.push(req.body);
-//         await idea.save()
-        
-//         //Find the newly created comment:
-//         const newLike = idea.likes[idea.likes.length - 1]
 
-//         // newLike._doc.author =req.user
-//         await idea.populate('likes.author')
-
-//         //Respond with the newComment:
-//         res.status(201).json(newLike);
-//     } catch (err) {
-//         res.status(500).json({ err:err.message})
-//     }
-// })
 
 
 router.post("/:ideaId/reactions", verifyToken, async(req, res) => {
@@ -234,27 +186,6 @@ router.post("/:ideaId/reactions", verifyToken, async(req, res) => {
     }
 })
   
-//Put /idea/:ideaId/likes/:likeId
-// router.put("/:ideaId/likes/:likeId",verifyToken,async(req,res) => {
-//     try {
-//         const idea = await Idea.findById(req.params.ideaId);
-//         const like = idea.likes.id(req.params.likeId);
-
-//         //ensure the current user is the author of the like
-//         if (like.author.toString() !== req.user._id){
-//             return res
-//             .status(403)
-//             .json({message: "You are not authorised to make changes to this like"})
-//         }
-
-//         like.like = req.body.like
-//         await idea.save()
-
-//         res.status(200).json({ message:'Like/Dislike updated sucessfully'})
-//     } catch(err) {
-//         res.status(500).json({err:err.message})
-//     }
-// })
 
 router.put("/:ideaId/reactions/:reactionId",verifyToken,async(req,res) => {
     try {
@@ -277,28 +208,6 @@ router.put("/:ideaId/reactions/:reactionId",verifyToken,async(req,res) => {
     }
 })
 
-//Delete/idea/:ideaId/likes/:likeId
-
-// router.delete("/:ideaId/likes/:likeId", verifyToken,async(req,res) => {
-//     try {
-//         const idea = await Idea.findById(req.params.ideaId);
-//         const like = idea.likes.id(req.params.likeId);
-
-//         //ensure the current user is the author of the like
-//         if (like.author.toString() !== req.user._id){
-//             return res
-//             .status(403)
-//             .json({message: "You are not authorised to make changes to this like"})
-//         }
-        
-//         idea.likes.remove({_id:req.params.likeId});
-//         await idea.save();
-//         res.status(200).json({ message:'Like/Dislike updated sucessfully'})
-//     } catch(err) {
-//         res.status(500).json({err:err.message})
-//     }
-// })
-
 router.delete("/:ideaId/reactions/:reactionId", verifyToken,async(req,res) => {
     try {
         const idea = await Idea.findById(req.params.ideaId);
@@ -319,25 +228,5 @@ router.delete("/:ideaId/reactions/:reactionId", verifyToken,async(req,res) => {
     }
 })
 
-router.delete("/:ideaId/comments/:commentId", verifyToken, async (req, res) => {
-    try {
-      const idea = await Idea.findById(req.params.ideaId);
-      const comment = idea.comments.id(req.params.commentId);
-  
-      // ensures the current user is the author of the comment
-      if (comment.author.toString() !== req.user._id) {
-        return res
-          .status(403)
-          .json({ message: "You are not authorized to edit this comment" });
-      }
-  
-      idea.comments.remove({ _id: req.params.commentId });
-      await idea.save();
-      res.status(200).json({ message: "Comment deleted successfully" });
-    } catch (err) {
-      res.status(500).json({ err: err.message });
-    }
-});
-  
 
 module.exports = router

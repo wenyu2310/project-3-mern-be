@@ -45,7 +45,7 @@ const ideaSchema = new mongoose.Schema(
     },
     author: {
       type: mongoose.Schema.Types.ObjectId, ref: "User", },
-      originalAuthorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // added originalAuthorId to 
+      // originalAuthorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // added originalAuthorId to 
     comments: [commentSchema],
     reactions: [reactionSchema],
   },
