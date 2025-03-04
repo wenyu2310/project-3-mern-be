@@ -34,7 +34,20 @@ const ideaSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    category: {
+      type: String,
+      required: true,
+      enum: ["Productivity", "Staff Welfare","Service Quality"],
+    },
     description: {
+      type: String,
+      required: true,
+    },
+    keyBenefits: {
+      type: String,
+      required: true,
+    },
+    implementationPlan: {
       type: String,
       required: true,
     },
