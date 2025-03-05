@@ -22,7 +22,7 @@ router.get("/", verifyToken, async (req, res) => {
     try {
         const ideas = await Idea.find({})
         .populate("author")
-        .sort({ createAt:"desc"})
+        .sort({ createdAt:"desc"})
     res.status(200).json(ideas)
     } catch (err) {
         res.status(500).json({ err:err.message})
