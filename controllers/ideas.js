@@ -9,7 +9,7 @@ router.post('/', verifyToken, async (req,res) => {
         req.body.author =req.user._id;
 
         let idea = await Idea.create(req.body);
-     
+   
         res.status(201).json(idea)
     } catch (err) {
         console.log("Error creating idea:", err); 
