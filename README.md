@@ -3,7 +3,7 @@
 
 
 ## Link to Site
-https://project-2-public-engagement-tool.vercel.app
+https://ideas-incubator.vercel.app/yourideas
 
 ## Project Brief
 This Company Ideas Incubator Tool aims to foster a culture of innovation and collaboration in the company. The tool will provide a platform for
